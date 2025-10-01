@@ -127,9 +127,47 @@ body {
     margin: 0 auto;
 }
 
-.mission-icon {
-    font-size: 2rem;
+/* Byte Companion */
+.byte-companion {
+    position: relative;
+}
+
+.byte-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #5ba0f2;
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    transition: all 0.5s ease;
+}
+
+.byte-character {
+    width: 3rem;
+    height: 3rem;
+    object-fit: contain;
+    transition: all 0.3s ease;
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Byte Happy State */
+.byte-companion.happy .byte-circle {
+    background: linear-gradient(135deg, #48c774, #3ec46d);
+    border-color: #5ed77e;
+    box-shadow: 0 4px 15px rgba(72, 199, 116, 0.5);
+    animation: byte-bounce 0.6s ease-in-out;
+}
+
+.byte-companion.happy .byte-character {
+    transform: scale(1.2);
+}
+
+@keyframes byte-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
 }
 
 .mission-text h3 {

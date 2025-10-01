@@ -433,9 +433,15 @@ class EVAMicrophoneStation {
         // Hide target line completely
         this.updateTargetLine();
         
+        // Hide Byte in endless mode (no more missions)
+        const byteCompanion = document.getElementById('byteCompanion');
+        if (byteCompanion) {
+            byteCompanion.style.display = 'none';
+        }
+        
         // Update UI for endless mode
         this.updateMissionDisplay();
-        this.updateMicrophoneStatus('Freies Singen - Endless Mode aktiv!');
+        this.updateMicrophoneStatus('🎵 Freies Singen - Endless Mode aktiv!');
         
         // Continue visualization
         if (this.isRecording) {
@@ -463,6 +469,13 @@ class EVAMicrophoneStation {
         this.updateTargetIndicator(false);
         this.updateHitProgress(0);
         
+        // Show and reset Byte to normal state (in case it was hidden in endless mode)
+        const byteCompanion = document.getElementById('byteCompanion');
+        if (byteCompanion) {
+            byteCompanion.style.display = 'block';
+        }
+        this.setByteState('normal');
+        
         // Update status and mission info
         this.updateMicrophoneStatus('Bereit für nächste Mission');
         this.updateMissionDisplay();
@@ -474,6 +487,26 @@ class EVAMicrophoneStation {
         }
         
         console.log('Mission reset - ready for next attempt');
+    }
+
+    setByteState(state) {
+        const byteCompanion = document.getElementById('byteCompanion');
+        const byteCharacter = document.getElementById('byteCharacter');
+        
+        if (byteCompanion && byteCharacter) {
+            // Remove all state classes
+            byteCompanion.classList.remove('happy', 'normal');
+            
+            if (state === 'happy') {
+                byteCompanion.classList.add('happy');
+                byteCharacter.src = 'Byte_mascot/Byte_Happy.png'; // Happy Byte
+                byteCharacter.alt = 'Byte Happy';
+            } else {
+                byteCompanion.classList.add('normal');
+                byteCharacter.src = 'Byte_mascot/Byte_normal.png'; // Normal Byte
+                byteCharacter.alt = 'Byte Normal';
+            }
+        }
     }
 
     updateTargetLine() {
@@ -572,6 +605,9 @@ class EVAMicrophoneStation {
         if (successMessage) {
             successMessage.classList.add('show');
         }
+        
+        // Make Byte happy
+        this.setByteState('happy');
         
         // Add celebration effect to the whole interface
         document.body.classList.add('mission-completed');
