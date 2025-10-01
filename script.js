@@ -273,9 +273,9 @@ class EVAMicrophoneStation {
         const now = Date.now();
         this.pitchTrail = this.pitchTrail.filter(point => now - point.time < 3000);
         
-        // Draw frequency range (100Hz to 500Hz)
-        const minFreq = 100;
-        const maxFreq = 500;
+        // Draw frequency range - expand for endless mode
+        const minFreq = this.endlessMode ? 50 : 100;
+        const maxFreq = this.endlessMode ? 600 : 500;
         
         // Draw pitch trail
         if (this.pitchTrail.length > 1) {
@@ -363,7 +363,19 @@ class EVAMicrophoneStation {
         ctx.font = '14px Arial';
         ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
         
-        for (let freq = 150; freq <= 450; freq += 50) {
+        // Dynamic grid based on frequency range
+        let startFreq, endFreq, step;
+        if (this.endlessMode) {
+            startFreq = 100;  // Start from 100Hz for cleaner grid
+            endFreq = 600;
+            step = 100;       // 100Hz steps for wider range
+        } else {
+            startFreq = 150;
+            endFreq = 450;
+            step = 50;        // 50Hz steps for mission mode
+        }
+        
+        for (let freq = startFreq; freq <= endFreq; freq += step) {
             const y = height - ((freq - minFreq) / (maxFreq - minFreq)) * height;
             ctx.beginPath();
             ctx.moveTo(0, y);
@@ -423,7 +435,7 @@ class EVAMicrophoneStation {
         
         // Update UI for endless mode
         this.updateMissionDisplay();
-        this.updateMicrophoneStatus('🎵 Freies Singen - Endless Mode aktiv!');
+        this.updateMicrophoneStatus('Freies Singen - Endless Mode aktiv!');
         
         // Continue visualization
         if (this.isRecording) {
