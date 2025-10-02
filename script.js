@@ -30,6 +30,14 @@ class EVAMicrophoneStation {
         this.frequencyBins = null;
         this.sampleRate = null;
         
+        // Station Timer System
+        this.stationTimer = null;
+        this.worksheetTimer = null;
+        this.activityTimeLeft = 3 * 60; // 3 minutes in seconds
+        this.worksheetTimeLeft = 3* 60; // 4 minutes in seconds
+        this.timerStarted = false;
+        this.worksheetPhase = false;
+        
         this.initializeEventListeners();
         this.initializeCanvas();
         this.updateTargetLine();
@@ -40,14 +48,28 @@ class EVAMicrophoneStation {
         document.getElementById('startStopBtn').addEventListener('click', () => {
             this.toggleRecording();
         });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            this.initializeCanvas();
+        });
     }
 
     initializeCanvas() {
         // Set canvas size properly
         const rect = this.canvas.getBoundingClientRect();
-        this.canvas.width = rect.width * window.devicePixelRatio;
-        this.canvas.height = rect.height * window.devicePixelRatio;
-        this.canvasContext.scale(window.devicePixelRatio, window.devicePixelRatio);
+        const dpr = window.devicePixelRatio || 1;
+        
+        this.canvas.width = rect.width * dpr;
+        this.canvas.height = rect.height * dpr;
+        
+        // Reset and apply scaling
+        this.canvasContext.setTransform(1, 0, 0, 1, 0, 0);
+        this.canvasContext.scale(dpr, dpr);
+        
+        // Clear any existing content
+        this.canvasContext.fillStyle = '#2d3748';
+        this.canvasContext.fillRect(0, 0, rect.width, rect.height);
         
         // Initial empty visualization
         this.drawVisualization([]);
@@ -94,6 +116,9 @@ class EVAMicrophoneStation {
             this.isRecording = true;
             this.updateRecordingUI();
             this.updateMicrophoneStatus('Aufnahme läuft...');
+            
+            // Start station timer on first recording start
+            this.startStationTimer();
             
             // Start visualization and analysis loop
             this.visualizationLoop();
@@ -629,6 +654,103 @@ class EVAMicrophoneStation {
         
         this.updateMicrophoneStatus(errorMessage);
         alert(errorMessage);
+    }
+
+    // Station Timer Methods
+    startStationTimer() {
+        if (this.timerStarted) return;
+        
+        this.timerStarted = true;
+        const timerElement = document.getElementById('stationTimer');
+        timerElement.style.display = 'flex';
+        
+        this.stationTimer = setInterval(() => {
+            this.activityTimeLeft--;
+            this.updateTimerDisplay();
+            
+            if (this.activityTimeLeft <= 0) {
+                this.startWorksheetPhase();
+            }
+        }, 1000);
+    }
+
+    updateTimerDisplay() {
+        const timerText = document.getElementById('timerText');
+        const minutes = Math.floor(this.activityTimeLeft / 60);
+        const seconds = this.activityTimeLeft % 60;
+        timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    startWorksheetPhase() {
+        // Clear activity timer
+        if (this.stationTimer) {
+            clearInterval(this.stationTimer);
+            this.stationTimer = null;
+        }
+        
+        // Hide activity timer
+        const timerElement = document.getElementById('stationTimer');
+        timerElement.style.display = 'none';
+        
+        // Show worksheet modal
+        this.worksheetPhase = true;
+        const modal = document.getElementById('worksheetModal');
+        modal.style.display = 'flex';
+        
+        // Start worksheet timer
+        this.startWorksheetTimer();
+    }
+
+    startWorksheetTimer() {
+        this.worksheetTimer = setInterval(() => {
+            this.worksheetTimeLeft--;
+            this.updateWorksheetTimerDisplay();
+            
+            if (this.worksheetTimeLeft <= 0) {
+                this.showStationChangePrompt();
+            }
+        }, 1000);
+    }
+
+    updateWorksheetTimerDisplay() {
+        const timerText = document.getElementById('modalTimerText');
+        const timerLabel = document.getElementById('modalTimerLabel');
+        
+        const minutes = Math.floor(this.worksheetTimeLeft / 60);
+        const seconds = this.worksheetTimeLeft % 60;
+        
+        timerText.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        timerLabel.textContent = `${minutes} Minuten bis zum Stationswechsel`;
+    }
+
+    showStationChangePrompt() {
+        // Clear worksheet timer
+        if (this.worksheetTimer) {
+            clearInterval(this.worksheetTimer);
+            this.worksheetTimer = null;
+        }
+        
+        // Update modal content
+        const modalTitle = document.getElementById('modalTitle');
+        const modalTimerText = document.getElementById('modalTimerText');
+        const modalTimerLabel = document.getElementById('modalTimerLabel');
+        const byteCharacter = document.querySelector('#worksheetModal .byte-character');
+        
+        modalTitle.textContent = 'Wechsle die Station! Drücke F5 um diese Station zu starten';
+        modalTimerText.style.display = 'none';
+        modalTimerLabel.textContent = 'Station beendet';
+        byteCharacter.src = 'Byte_mascot/Byte_Happy.png';
+        byteCharacter.alt = 'Byte Happy';
+        
+        // Listen for F5 key
+        document.addEventListener('keydown', this.handleF5Restart.bind(this));
+    }
+
+    handleF5Restart(event) {
+        if (event.key === 'F5') {
+            event.preventDefault();
+            location.reload();
+        }
     }
 
     // Removed navigation methods
